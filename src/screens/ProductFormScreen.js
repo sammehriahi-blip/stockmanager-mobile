@@ -1,5 +1,5 @@
 import { useLayoutEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import FormField from '../components/FormField';
 import FilterChip from '../components/FilterChip';
 import { useProducts } from '../context/ProductsContext';
@@ -18,6 +18,7 @@ export default function ProductFormScreen({ route, navigation }) {
     existing ? { ...existing, quantity: String(existing.quantity), price: String(existing.price) } : EMPTY
   );
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: existing ? 'Modifier le produit' : 'Nouveau produit' });
@@ -28,7 +29,7 @@ export default function ProductFormScreen({ route, navigation }) {
     if (errors[field]) setErrors((e) => ({ ...e, [field]: undefined }));
   };
 
-  const save = () => {
+  const save = async () => {
     const found = validateProduct(values, products, editingId);
     setErrors(found);
     if (Object.keys(found).length > 0) return;
@@ -41,9 +42,22 @@ export default function ProductFormScreen({ route, navigation }) {
       quantity: Number(values.quantity),
       price: Number(String(values.price).replace(',', '.')),
     };
-    if (existing) updateProduct({ ...product, id: editingId });
-    else addProduct(product);
-    navigation.goBack();
+    delete product.id;
+    delete product.createdAt;
+    delete product.updatedAt;
+
+    setSaving(true);
+    try {
+      if (existing) await updateProduct(editingId, product);
+      else await addProduct(product);
+      navigation.goBack();
+    } catch (err) {
+      // Erreurs renvoyées par l'API (ex : référence déjà utilisée)
+      if (err.errors) setErrors(err.errors);
+      else Alert.alert('Enregistrement impossible', err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -73,8 +87,12 @@ export default function ProductFormScreen({ route, navigation }) {
 
         <FormField label="Fournisseur" placeholder="TechPro" value={values.supplier} onChangeText={set('supplier')} error={errors.supplier} />
 
-        <Pressable onPress={save} style={({ pressed }) => [styles.saveBtn, pressed && { opacity: 0.85 }]}>
-          <Text style={styles.saveText}>{existing ? 'Enregistrer les modifications' : 'Ajouter le produit'}</Text>
+        <Pressable onPress={save} disabled={saving} style={({ pressed }) => [styles.saveBtn, (pressed || saving) && { opacity: 0.7 }]}>
+          {saving ? (
+            <ActivityIndicator color={colors.ink} />
+          ) : (
+            <Text style={styles.saveText}>{existing ? 'Enregistrer les modifications' : 'Ajouter le produit'}</Text>
+          )}
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

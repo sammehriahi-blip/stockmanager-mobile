@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { View, Text, FlatList, StyleSheet, ScrollView, Pressable, TextInput, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ProductCard from '../components/ProductCard';
 import SearchBar from '../components/SearchBar';
@@ -7,7 +7,7 @@ import FilterChip from '../components/FilterChip';
 import EmptyState from '../components/EmptyState';
 import { useProducts } from '../context/ProductsContext';
 import { CATEGORIES } from '../data/mockProducts';
-import { getStockStatus } from '../utils/stock';
+import { productService } from '../services/productService';
 import { colors, radius, spacing } from '../theme';
 
 const STATUSES = [
@@ -23,7 +23,7 @@ const SORTS = [
 ];
 
 export default function ProductListScreen({ navigation }) {
-  const { products, adjustStock } = useProducts();
+  const { adjustStock, version } = useProducts();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState(null);
   const [status, setStatus] = useState(null);
@@ -32,21 +32,49 @@ export default function ProductListScreen({ navigation }) {
   const [sortBy, setSortBy] = useState('name');
   const [showFilters, setShowFilters] = useState(false);
 
+  const [visible, setVisible] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
+
   const activeFilters = [category, status, minPrice, maxPrice].filter(Boolean).length;
 
-  const visible = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const min = minPrice === '' ? null : Number(minPrice);
-    const max = maxPrice === '' ? null : Number(maxPrice);
+  // Recherche, filtres et tri sont faits par l'API (query params)
+  const load = useCallback(async () => {
+    try {
+      setError(null);
+      const data = await productService.getAll({
+        search: search.trim(),
+        category,
+        status,
+        minPrice,
+        maxPrice,
+        sort: sortBy,
+      });
+      setVisible(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [search, category, status, minPrice, maxPrice, sortBy]);
 
-    return products
-      .filter((p) => !q || p.name.toLowerCase().includes(q) || p.reference.toLowerCase().includes(q))
-      .filter((p) => !category || p.category === category)
-      .filter((p) => !status || getStockStatus(p.quantity) === status)
-      .filter((p) => min === null || p.price >= min)
-      .filter((p) => max === null || p.price <= max)
-      .sort((a, b) => (sortBy === 'name' ? a.name.localeCompare(b.name) : a[sortBy] - b[sortBy]));
-  }, [products, search, category, status, minPrice, maxPrice, sortBy]);
+  // Attend 300 ms après la dernière frappe avant d'appeler l'API
+  useEffect(() => {
+    const timer = setTimeout(load, 300);
+    return () => clearTimeout(timer);
+  }, [load, version]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  };
+
+  const changeStock = (id, delta) => {
+    setVisible((list) => list.map((p) => (p.id === id ? { ...p, quantity: Math.max(0, p.quantity + delta) } : p)));
+    adjustStock(id, delta);
+  };
 
   const resetFilters = () => {
     setSearch('');
@@ -126,22 +154,29 @@ export default function ProductListScreen({ navigation }) {
         ListHeaderComponent={header}
         contentContainerStyle={styles.list}
         keyboardShouldPersistTaps="handled"
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         renderItem={({ item }) => (
           <ProductCard
             product={item}
             onPress={() => navigation.navigate('ProductDetail', { id: item.id })}
-            onIncrement={() => adjustStock(item.id, 1)}
-            onDecrement={() => adjustStock(item.id, -1)}
+            onIncrement={() => changeStock(item.id, 1)}
+            onDecrement={() => changeStock(item.id, -1)}
           />
         )}
         ListEmptyComponent={
-          <EmptyState
-            icon="search-outline"
-            title="Aucun produit trouvé"
-            message="Modifiez votre recherche ou vos filtres."
-            actionLabel="Réinitialiser les filtres"
-            onAction={resetFilters}
-          />
+          loading ? (
+            <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: spacing.xxl }} />
+          ) : error ? (
+            <EmptyState icon="cloud-offline-outline" title="Connexion impossible" message={error} actionLabel="Réessayer" onAction={load} />
+          ) : (
+            <EmptyState
+              icon="search-outline"
+              title="Aucun produit trouvé"
+              message="Modifiez votre recherche ou vos filtres."
+              actionLabel="Réinitialiser les filtres"
+              onAction={resetFilters}
+            />
+          )
         }
       />
 

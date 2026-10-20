@@ -31,9 +31,13 @@ export default function ProductDetailScreen({ route, navigation }) {
       {
         text: 'Supprimer',
         style: 'destructive',
-        onPress: () => {
-          deleteProduct(product.id);
-          navigation.goBack();
+        onPress: async () => {
+          try {
+            await deleteProduct(product.id);
+            navigation.goBack();
+          } catch (err) {
+            Alert.alert('Suppression impossible', err.message);
+          }
         },
       },
     ]);

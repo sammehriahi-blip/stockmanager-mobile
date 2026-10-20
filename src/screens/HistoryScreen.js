@@ -1,7 +1,9 @@
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { useCallback, useState } from 'react';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import EmptyState from '../components/EmptyState';
-import { useProducts } from '../context/ProductsContext';
+import { productService } from '../services/productService';
 import { formatDate } from '../utils/format';
 import { colors, radius, spacing } from '../theme';
 
@@ -12,7 +14,34 @@ const TYPES = {
 };
 
 export default function HistoryScreen() {
-  const { movements } = useProducts();
+  const [movements, setMovements] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
+
+  const load = useCallback(async () => {
+    try {
+      setError(null);
+      setMovements(await productService.getMovements());
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Recharge à chaque fois qu'on ouvre l'onglet
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  };
 
   return (
     <FlatList
@@ -20,8 +49,9 @@ export default function HistoryScreen() {
       contentContainerStyle={{ padding: spacing.lg, flexGrow: 1 }}
       data={movements}
       keyExtractor={(m) => m.id}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       renderItem={({ item }) => {
-        const t = TYPES[item.type];
+        const t = TYPES[item.type] || TYPES.creation;
         return (
           <View style={styles.row}>
             <View style={[styles.icon, { backgroundColor: t.bg }]}>
@@ -29,16 +59,22 @@ export default function HistoryScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.name}>{item.productName}</Text>
-              <Text style={styles.meta}>{t.label}, le {formatDate(item.date)}</Text>
+              <Text style={styles.meta}>
+                {t.label}, le {formatDate(item.date)}, stock : {item.quantityAfter}
+              </Text>
             </View>
-            <Text style={[styles.delta, { color: t.color }]}>
-              {item.delta > 0 ? `+${item.delta}` : item.delta}
-            </Text>
+            <Text style={[styles.delta, { color: t.color }]}>{item.delta > 0 ? `+${item.delta}` : item.delta}</Text>
           </View>
         );
       }}
       ListEmptyComponent={
-        <EmptyState icon="time-outline" title="Aucun mouvement pour l'instant" message="Utilisez + ou − sur un produit : chaque entrée et sortie de stock apparaîtra ici." />
+        loading ? (
+          <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: spacing.xxl }} />
+        ) : error ? (
+          <EmptyState icon="cloud-offline-outline" title="Connexion impossible" message={error} actionLabel="Réessayer" onAction={load} />
+        ) : (
+          <EmptyState icon="time-outline" title="Aucun mouvement pour l'instant" message="Utilisez + ou − sur un produit : chaque entrée et sortie de stock apparaîtra ici." />
+        )
       }
     />
   );

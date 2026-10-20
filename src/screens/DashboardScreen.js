@@ -1,20 +1,51 @@
-import { ScrollView, View, Text, StyleSheet, Pressable } from 'react-native';
+import { useState } from 'react';
+import { ScrollView, View, Text, StyleSheet, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import StatCard from '../components/StatCard';
 import StockBadge from '../components/StockBadge';
+import EmptyState from '../components/EmptyState';
 import { useProducts } from '../context/ProductsContext';
 import { formatPrice } from '../utils/format';
 import { colors, radius, spacing, font } from '../theme';
 
 export default function DashboardScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const { stats } = useProducts();
+  const { stats, loading, error, refresh } = useProducts();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refresh();
+    setRefreshing(false);
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.ink} />
+        <Text style={[font.small, { marginTop: spacing.md }]}>Chargement de l'inventaire…</Text>
+      </View>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <View style={styles.center}>
+        <EmptyState icon="cloud-offline-outline" title="Connexion impossible" message={error} actionLabel="Réessayer" onAction={refresh} />
+      </View>
+    );
+  }
+
   const alerts = [...stats.outOfStock, ...stats.lowStock];
   const maxValue = Math.max(...stats.byCategory.map((c) => c.value), 1);
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: spacing.xxl }}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={{ paddingBottom: spacing.xxl }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.white} />}
+    >
       <View style={[styles.hero, { paddingTop: insets.top + spacing.lg }]}>
         <View style={styles.brandRow}>
           <View style={styles.logo}>
@@ -87,6 +118,7 @@ export default function DashboardScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg, padding: spacing.xl },
   hero: { backgroundColor: colors.ink, paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl + spacing.lg },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xl },
   logo: { width: 30, height: 30, borderRadius: radius.sm, backgroundColor: colors.signal, alignItems: 'center', justifyContent: 'center' },
