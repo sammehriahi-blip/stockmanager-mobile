@@ -54,7 +54,6 @@ export function ProductsProvider({ children }) {
         await afterChange();
         return updated;
       },
-
       deleteProduct: async (id) => {
         await productService.remove(id);
         await afterChange();

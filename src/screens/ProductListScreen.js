@@ -38,8 +38,6 @@ export default function ProductListScreen({ navigation }) {
   const [error, setError] = useState(null);
 
   const activeFilters = [category, status, minPrice, maxPrice].filter(Boolean).length;
-
-  // Recherche, filtres et tri sont faits par l'API (query params)
   const load = useCallback(async () => {
     try {
       setError(null);

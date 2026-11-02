@@ -1,4 +1,3 @@
-// Règles du cahier des charges : référence unique, quantité positive, prix non nul.
 export function validateProduct(values, products, editingId) {
   const errors = {};
   const quantity = Number(values.quantity);

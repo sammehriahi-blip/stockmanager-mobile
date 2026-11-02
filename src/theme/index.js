@@ -11,7 +11,7 @@ export const colors = {
   textMuted: '#667085',
   border: '#DDE1E7',
   success: '#1F8A4C',
-  successBg: '#E3F4EA',
+  successBg: '#E3F4EA', 
   warning: '#B86E00',
   warningBg: '#FFF1D6',
   danger: '#C8372D',

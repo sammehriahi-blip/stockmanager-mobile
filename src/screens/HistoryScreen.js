@@ -6,7 +6,6 @@ import EmptyState from '../components/EmptyState';
 import { productService } from '../services/productService';
 import { formatDate } from '../utils/format';
 import { colors, radius, spacing } from '../theme';
-
 const TYPES = {
   entree: { label: 'Entrée', icon: 'arrow-down', color: colors.success, bg: colors.successBg },
   sortie: { label: 'Sortie', icon: 'arrow-up', color: colors.danger, bg: colors.dangerBg },

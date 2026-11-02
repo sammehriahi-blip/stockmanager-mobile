@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DashboardScreen from '../screens/DashboardScreen';
 import ProductListScreen from '../screens/ProductListScreen';
 import HistoryScreen from '../screens/HistoryScreen';
+import ScannerScreen from '../screens/ScannerScreen';
 import ProductDetailScreen from '../screens/ProductDetailScreen';
 import ProductFormScreen from '../screens/ProductFormScreen';
 import { colors } from '../theme';
@@ -14,6 +15,7 @@ const Tab = createBottomTabNavigator();
 const TAB_ICONS = {
   Dashboard: 'speedometer-outline',
   Produits: 'cube-outline',
+  Scanner: 'scan-outline',
   Historique: 'time-outline',
 };
 
@@ -38,6 +40,7 @@ function MainTabs() {
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Produits" component={ProductListScreen} options={{ title: 'Produits' }} />
+      <Tab.Screen name="Scanner" component={ScannerScreen} options={{ title: 'Scanner un produit' }} />
       <Tab.Screen name="Historique" component={HistoryScreen} options={{ title: 'Historique' }} />
     </Tab.Navigator>
   );

@@ -20,6 +20,7 @@ export default function DashboardScreen({ navigation }) {
     setRefreshing(false);
   };
 
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -36,7 +37,6 @@ export default function DashboardScreen({ navigation }) {
       </View>
     );
   }
-
   const alerts = [...stats.outOfStock, ...stats.lowStock];
   const maxValue = Math.max(...stats.byCategory.map((c) => c.value), 1);
 
@@ -107,7 +107,7 @@ export default function DashboardScreen({ navigation }) {
               </View>
               <View style={styles.barTrack}>
                 <View style={[styles.barFill, { width: `${(c.value / maxValue) * 100}%` }]} />
-              </View>
+              </View> 
             </View>
           ))}
         </View>
@@ -115,7 +115,6 @@ export default function DashboardScreen({ navigation }) {
     </ScrollView>
   );
 }
-
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg, padding: spacing.xl },

@@ -1,8 +1,6 @@
 import { API_URL } from '../config';
 
 const TIMEOUT_MS = 8000;
-
-// Toutes les requêtes HTTP passent par ici : un seul endroit pour gérer les erreurs.
 export async function request(path, { method = 'GET', body } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);

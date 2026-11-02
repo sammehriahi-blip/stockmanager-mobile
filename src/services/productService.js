@@ -11,6 +11,7 @@ function toQuery(params = {}) {
 export const productService = {
   getAll: (params) => request(`/products${toQuery(params)}`),
   getOne: (id) => request(`/products/${id}`),
+  getByBarcode: (code) => request(`/products/barcode/${encodeURIComponent(code)}`),
   create: (data) => request('/products', { method: 'POST', body: data }),
   update: (id, data) => request(`/products/${id}`, { method: 'PUT', body: data }),
   updateStock: (id, delta) => request(`/products/${id}/stock`, { method: 'PATCH', body: { delta } }),

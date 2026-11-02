@@ -61,12 +61,11 @@ export default function ProductDetailScreen({ route, navigation }) {
             onPress={() => adjustStock(product.id, -1)}
             disabled={product.quantity === 0}
             style={[styles.bigBtn, product.quantity === 0 && { opacity: 0.35 }]}
-            accessibilityLabel="Retirer une unité"
           >
             <Ionicons name="remove" size={26} color={colors.white} />
           </Pressable>
           <Text style={styles.bigQty}>{product.quantity}</Text>
-          <Pressable onPress={() => adjustStock(product.id, 1)} style={[styles.bigBtn, styles.bigBtnPlus]} accessibilityLabel="Ajouter une unité">
+          <Pressable onPress={() => adjustStock(product.id, 1)} style={[styles.bigBtn, styles.bigBtnPlus]}>
             <Ionicons name="add" size={26} color={colors.ink} />
           </Pressable>
         </View>
@@ -76,7 +75,8 @@ export default function ProductDetailScreen({ route, navigation }) {
       <View style={styles.panel}>
         <InfoRow icon="pricetag-outline" label="Prix unitaire" value={formatPrice(product.price)} />
         <InfoRow icon="grid-outline" label="Catégorie" value={product.category} />
-        <InfoRow icon="business-outline" label="Fournisseur" value={product.supplier} last />
+        <InfoRow icon="business-outline" label="Fournisseur" value={product.supplier} last={!product.barcode} />
+        {product.barcode ? <InfoRow icon="barcode-outline" label="Code-barres" value={product.barcode} last /> : null}
       </View>
 
       <Pressable onPress={() => navigation.navigate('ProductForm', { id: product.id })} style={styles.editBtn}>

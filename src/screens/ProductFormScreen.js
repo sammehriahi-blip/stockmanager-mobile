@@ -7,7 +7,7 @@ import { CATEGORIES } from '../data/mockProducts';
 import { validateProduct } from '../utils/validation';
 import { colors, radius, spacing } from '../theme';
 
-const EMPTY = { name: '', reference: '', category: '', quantity: '', price: '', supplier: '' };
+const EMPTY = { name: '', reference: '', category: '', quantity: '', price: '', supplier: '', barcode: '' };
 
 export default function ProductFormScreen({ route, navigation }) {
   const { products, getProduct, addProduct, updateProduct } = useProducts();
@@ -15,7 +15,9 @@ export default function ProductFormScreen({ route, navigation }) {
   const existing = editingId ? getProduct(editingId) : null;
 
   const [values, setValues] = useState(
-    existing ? { ...existing, quantity: String(existing.quantity), price: String(existing.price) } : EMPTY
+    existing
+      ? { ...existing, quantity: String(existing.quantity), price: String(existing.price), barcode: existing.barcode || '' }
+      : { ...EMPTY, barcode: route.params?.barcode || '' }
   );
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -35,16 +37,14 @@ export default function ProductFormScreen({ route, navigation }) {
     if (Object.keys(found).length > 0) return;
 
     const product = {
-      ...values,
       name: values.name.trim(),
       reference: values.reference.trim().toUpperCase(),
-      supplier: values.supplier.trim(),
+      category: values.category,
       quantity: Number(values.quantity),
       price: Number(String(values.price).replace(',', '.')),
+      supplier: values.supplier.trim(),
+      barcode: (values.barcode || '').trim(),
     };
-    delete product.id;
-    delete product.createdAt;
-    delete product.updatedAt;
 
     setSaving(true);
     try {
@@ -52,7 +52,6 @@ export default function ProductFormScreen({ route, navigation }) {
       else await addProduct(product);
       navigation.goBack();
     } catch (err) {
-      // Erreurs renvoyées par l'API (ex : référence déjà utilisée)
       if (err.errors) setErrors(err.errors);
       else Alert.alert('Enregistrement impossible', err.message);
     } finally {
@@ -86,6 +85,14 @@ export default function ProductFormScreen({ route, navigation }) {
         </View>
 
         <FormField label="Fournisseur" placeholder="TechPro" value={values.supplier} onChangeText={set('supplier')} error={errors.supplier} />
+        <FormField
+          label="Code-barres (optionnel)"
+          placeholder="Scannez depuis l'onglet Scanner"
+          keyboardType="number-pad"
+          value={values.barcode}
+          onChangeText={set('barcode')}
+          error={errors.barcode}
+        />
 
         <Pressable onPress={save} disabled={saving} style={({ pressed }) => [styles.saveBtn, (pressed || saving) && { opacity: 0.7 }]}>
           {saving ? (

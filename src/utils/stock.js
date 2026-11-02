@@ -7,7 +7,6 @@ export function getStockStatus(quantity) {
   if (quantity < LOW_STOCK_THRESHOLD) return 'bas';
   return 'disponible';
 }
-
 export const STATUS_META = {
   disponible: { label: 'Disponible', color: colors.success, bg: colors.successBg, icon: 'checkmark-circle' },
   bas: { label: 'Stock bas', color: colors.warning, bg: colors.warningBg, icon: 'alert-circle' },
