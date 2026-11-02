@@ -2,7 +2,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing } from '../theme';
 
-export default function StatCard({ icon, label, value, color = colors.ink, bg = colors.bg }) {
+export default function StatsWidget({ icon, label, value, color = colors.ink, bg = colors.bg }) {
   return (
     <View style={styles.card}>
       <View style={[styles.icon, { backgroundColor: bg }]}>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ScrollView, View, Text, StyleSheet, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import StatCard from '../components/StatCard';
+import StatsWidget from '../components/StatsWidget';
 import StockBadge from '../components/StockBadge';
 import EmptyState from '../components/EmptyState';
 import { useProducts } from '../context/ProductsContext';
@@ -20,7 +20,6 @@ export default function DashboardScreen({ navigation }) {
     setRefreshing(false);
   };
 
-
   if (loading) {
     return (
       <View style={styles.center}>
@@ -37,6 +36,7 @@ export default function DashboardScreen({ navigation }) {
       </View>
     );
   }
+
   const alerts = [...stats.outOfStock, ...stats.lowStock];
   const maxValue = Math.max(...stats.byCategory.map((c) => c.value), 1);
 
@@ -65,12 +65,12 @@ export default function DashboardScreen({ navigation }) {
 
       <View style={styles.content}>
         <View style={styles.grid}>
-          <StatCard icon="layers-outline" label="Produits" value={stats.totalProducts} />
-          <StatCard icon="cube-outline" label="Unités en stock" value={stats.totalUnits} />
+          <StatsWidget icon="layers-outline" label="Produits" value={stats.totalProducts} />
+          <StatsWidget icon="cube-outline" label="Unités en stock" value={stats.totalUnits} />
         </View>
         <View style={styles.grid}>
-          <StatCard icon="alert-circle-outline" label="Stock bas" value={stats.lowStock.length} color={colors.warning} bg={colors.warningBg} />
-          <StatCard icon="close-circle-outline" label="En rupture" value={stats.outOfStock.length} color={colors.danger} bg={colors.dangerBg} />
+          <StatsWidget icon="alert-circle-outline" label="Stock bas" value={stats.lowStock.length} color={colors.warning} bg={colors.warningBg} />
+          <StatsWidget icon="close-circle-outline" label="En rupture" value={stats.outOfStock.length} color={colors.danger} bg={colors.dangerBg} />
         </View>
 
         <Text style={styles.section}>À réapprovisionner</Text>
@@ -107,7 +107,7 @@ export default function DashboardScreen({ navigation }) {
               </View>
               <View style={styles.barTrack}>
                 <View style={[styles.barFill, { width: `${(c.value / maxValue) * 100}%` }]} />
-              </View> 
+              </View>
             </View>
           ))}
         </View>
@@ -115,6 +115,7 @@ export default function DashboardScreen({ navigation }) {
     </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg, padding: spacing.xl },
