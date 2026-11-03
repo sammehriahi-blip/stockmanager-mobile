@@ -1,6 +1,6 @@
 import { API_URL } from '../config';
 
-const TIMEOUT_MS = 8000;
+const TIMEOUT_MS = 6000;
 export async function request(path, { method = 'GET', body } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
